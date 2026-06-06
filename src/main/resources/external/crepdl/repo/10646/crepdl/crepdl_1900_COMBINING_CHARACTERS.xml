@@ -1,0 +1,4 @@
+<intersection xmlns="http://purl.oclc.org/dsdl/crepdl/ns/structure/2.0">
+                  <char>[\p{Mc}|\p{Mn}|\p{Me}]</char>
+                  <repertoire name="SMP" registry="10646"/>
+                </intersection>

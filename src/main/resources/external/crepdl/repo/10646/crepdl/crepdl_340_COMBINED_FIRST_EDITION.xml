@@ -1,0 +1,12 @@
+<union xmlns="http://purl.oclc.org/dsdl/crepdl/ns/structure/2.0">
+                      <repertoire  registry="10646" number="302"/>
+                      <repertoire  registry="10646" number="98"/>
+                      <repertoire  registry="10646" number="99"/>
+                      <repertoire  registry="10646" number="100"/>
+                      <repertoire  registry="10646" number="101"/>
+                      <repertoire  registry="10646" number="102"/>
+                      <repertoire  registry="10646" number="103"/>
+                      <repertoire  registry="10646" number="108"/>
+                      <repertoire  registry="10646" number="111"/>
+                      <repertoire  registry="10646" number="-340"/>
+                    </union>

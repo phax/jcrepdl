@@ -1,0 +1,4 @@
+<union xmlns="http://purl.oclc.org/dsdl/crepdl/ns/structure/2.0" mode="character">
+  <char>[&#xFF01;-&#xFF60;]</char>
+  <char>[&#xFFE0;-&#xFFEE;]</char>
+</union>

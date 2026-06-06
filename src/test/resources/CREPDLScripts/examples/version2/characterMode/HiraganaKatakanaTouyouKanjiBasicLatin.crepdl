@@ -1,0 +1,6 @@
+<union xmlns="http://purl.oclc.org/dsdl/crepdl/ns/structure/2.0" mode="character">
+  <char>[\x00-\x7f]</char>
+  <ref href="Hiragana.crepdl"/>
+  <ref href="Katakana.crepdl"/>
+  <ref href="TouyouKanji.crepdl"/>
+</union>

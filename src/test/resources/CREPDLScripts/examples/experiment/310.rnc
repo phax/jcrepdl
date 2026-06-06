@@ -1,0 +1,22 @@
+default namespace = ""
+
+start =
+  element collection {
+    attribute name { text },
+    attribute number { xsd:integer },
+    plane+
+  }
+plane =
+  element plane {
+      attribute number { xsd:NMTOKEN },
+      (element range {
+         attribute range { xsd:NCName }?,
+         attribute row { xsd:NMTOKEN }?,
+         xsd:NMTOKEN
+       }
+       | element row {
+           attribute number { xsd:NMTOKEN },
+           text
+         })+
+    }
+
