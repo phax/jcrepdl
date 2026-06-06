@@ -40,8 +40,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import com.helger.crepdl.CCREPDL;
 import com.helger.crepdl.EMode;
@@ -86,6 +88,55 @@ public final class CREPDLReader
   private static final Set <String> ALLOWED_COMMON_ATTRS = Set.of (CCREPDL.ATTR_MODE,
                                                                    CCREPDL.ATTR_MIN_UCS_VERSION,
                                                                    CCREPDL.ATTR_MAX_UCS_VERSION);
+
+  // Routes SAX warnings/errors through LOGGER instead of the JDK default
+  // (which writes to System.err and would also trip forbiddenapis if anyone
+  // leaned on it). error() and fatalError() rethrow so the parser stays
+  // strict — recoverable errors must not silently degrade the parse result.
+  private static final class LoggingErrorHandler implements ErrorHandler
+  {
+    @NonNull
+    private static String _format (@NonNull final SAXParseException ex)
+    {
+      final StringBuilder aSB = new StringBuilder ();
+      final String sSysId = ex.getSystemId ();
+      if (sSysId != null && !sSysId.isEmpty ())
+        aSB.append ('[').append (sSysId).append ("] ");
+      final int nLine = ex.getLineNumber ();
+      final int nCol = ex.getColumnNumber ();
+      if (nLine > 0)
+        aSB.append ("line ").append (nLine);
+      if (nCol > 0)
+      {
+        if (nLine > 0)
+          aSB.append (", ");
+        aSB.append ("column ").append (nCol);
+      }
+      if (nLine > 0 || nCol > 0)
+        aSB.append (": ");
+      aSB.append (ex.getMessage ());
+      return aSB.toString ();
+    }
+
+    public void warning (@NonNull final SAXParseException ex)
+    {
+      LOGGER.warn ("XML warning: " + _format (ex));
+    }
+
+    public void error (@NonNull final SAXParseException ex) throws SAXException
+    {
+      LOGGER.error ("XML error: " + _format (ex));
+      throw ex;
+    }
+
+    public void fatalError (@NonNull final SAXParseException ex) throws SAXException
+    {
+      LOGGER.error ("XML fatal error: " + _format (ex));
+      throw ex;
+    }
+  }
+
+  private static final ErrorHandler LOGGING_ERROR_HANDLER = new LoggingErrorHandler ();
 
   private CREPDLReader ()
   {}
@@ -132,7 +183,10 @@ public final class CREPDLReader
     _setFeature (aDBF, "http://xml.org/sax/features/external-parameter-entities", false);
     _setFeature (aDBF, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
     aDBF.setNamespaceAware (true);
-    aDBF.setValidating (true);
+    // No DTD/XSD is supplied by this project and DOCTYPE is disallowed, so
+    // validating mode would only ever produce a spurious "no grammar found"
+    // error on every parse.
+    aDBF.setValidating (false);
     aDBF.setIgnoringElementContentWhitespace (false);
     aDBF.setExpandEntityReferences (true);
     aDBF.setIgnoringComments (true);
@@ -145,7 +199,9 @@ public final class CREPDLReader
     {
       // Ignore
     }
-    return aDBF.newDocumentBuilder ();
+    final DocumentBuilder aBuilder = aDBF.newDocumentBuilder ();
+    aBuilder.setErrorHandler (LOGGING_ERROR_HANDLER);
+    return aBuilder;
   }
 
   // CREPDL attributes are unprefixed and therefore live in the "no
