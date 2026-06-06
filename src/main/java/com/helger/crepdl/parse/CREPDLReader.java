@@ -577,8 +577,7 @@ public final class CREPDLReader
       // I/O and XML well-formedness errors collapse into the same
       // exception type so callers have a single failure mode for the
       // whole "load and parse" operation.
-      throw new CREPDLParseException ("Failed to read CREPDL script from '" + aUri + "' (" + ex.getMessage () + ")",
-                                      ex);
+      throw new CREPDLParseException ("Failed to read CREPDL script from '" + aUri + "'", ex);
     }
   }
 

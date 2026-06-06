@@ -201,7 +201,8 @@ final class CREPDLScriptsCorpusTest
     aAll.addAll (_collect (_corpusRoot ().resolve ("version2/graphemeClusterMode")));
     assertFalse (aAll.isEmpty (), "no v2 scripts found");
 
-    aAll.forEach (x -> LOGGER.info (x.toString ()));
+    if (false)
+      aAll.forEach (x -> LOGGER.info (x.toString ()));
 
     final List <String> aUnexpectedFailures = new ArrayList <> ();
     int nBuilt = 0;
