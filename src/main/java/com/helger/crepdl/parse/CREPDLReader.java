@@ -89,6 +89,12 @@ public final class CREPDLReader
                                                                    CCREPDL.ATTR_MIN_UCS_VERSION,
                                                                    CCREPDL.ATTR_MAX_UCS_VERSION);
 
+  // Hard ceiling on CREPDL element nesting depth, to bound recursion in
+  // _parseElement on pathological input. Root has depth 0; a child has its
+  // parent's depth plus 1. The limit is high enough that no real-world
+  // CREPDL script reaches it.
+  private static final int MAX_NESTING_DEPTH = 100;
+
   // Routes SAX warnings/errors through LOGGER instead of the JDK default
   // (which writes to System.err and would also trip forbiddenapis if anyone
   // leaned on it). error() and fatalError() rethrow so the parser stays
@@ -450,12 +456,14 @@ public final class CREPDLReader
   // ----------------------------------------------------------------------
 
   @NonNull
-  private static List <ICREPDLNode> _parseCrepdlChildren (@NonNull final Element aElem, @Nullable final URI aBaseUri)
+  private static List <ICREPDLNode> _parseCrepdlChildren (@NonNull final Element aElem,
+                                                          @Nullable final URI aBaseUri,
+                                                          final int nDepth)
   {
     final List <Element> aKids = _collectCrepdlChildren (aElem);
     final List <ICREPDLNode> aRet = new ArrayList <> (aKids.size ());
     for (final Element aKid : aKids)
-      aRet.add (_parseElement (aKid, aBaseUri));
+      aRet.add (_parseElement (aKid, aBaseUri, nDepth));
     return aRet;
   }
 
@@ -463,8 +471,17 @@ public final class CREPDLReader
   // six concrete subtypes of ICREPDLNode; the sealed hierarchy means any
   // future addition will produce a compile-time warning here.
   @NonNull
-  private static ICREPDLNode _parseElement (@NonNull final Element aElem, @Nullable final URI aBaseUri)
+  private static ICREPDLNode _parseElement (@NonNull final Element aElem,
+                                            @Nullable final URI aBaseUri,
+                                            final int nDepth)
   {
+    if (nDepth > MAX_NESTING_DEPTH)
+      throw new CREPDLParseException ("Maximum CREPDL nesting depth of " +
+                                      MAX_NESTING_DEPTH +
+                                      " exceeded at element '" +
+                                      aElem.getLocalName () +
+                                      "'");
+
     // Defensive: callers reach this method via _parseCrepdlChildren (which
     // already namespace-filters) OR via parseRoot (a public entry point
     // that can be handed any DOM element by the caller). The latter is
@@ -486,17 +503,17 @@ public final class CREPDLReader
       case CCREPDL.ELEMENT_UNION ->
       {
         _checkAttrs (aElem, Set.of ());
-        yield new CREPDLUnion (eMode, nMin, nMax, _parseCrepdlChildren (aElem, aBaseUri));
+        yield new CREPDLUnion (eMode, nMin, nMax, _parseCrepdlChildren (aElem, aBaseUri, nDepth + 1));
       }
       case CCREPDL.ELEMENT_INTERSECTION ->
       {
         _checkAttrs (aElem, Set.of ());
-        yield new CREPDLIntersection (eMode, nMin, nMax, _parseCrepdlChildren (aElem, aBaseUri));
+        yield new CREPDLIntersection (eMode, nMin, nMax, _parseCrepdlChildren (aElem, aBaseUri, nDepth + 1));
       }
       case CCREPDL.ELEMENT_DIFFERENCE ->
       {
         _checkAttrs (aElem, Set.of ());
-        yield new CREPDLDifference (eMode, nMin, nMax, _parseCrepdlChildren (aElem, aBaseUri));
+        yield new CREPDLDifference (eMode, nMin, nMax, _parseCrepdlChildren (aElem, aBaseUri, nDepth + 1));
       }
       case CCREPDL.ELEMENT_REF ->
       {
@@ -544,7 +561,7 @@ public final class CREPDLReader
     final String sNs = aRoot.getNamespaceURI ();
     if (!CCREPDL.NAMESPACE_URI_V2.equals (sNs))
       throw new CREPDLParseException ("Illegal namespace '" + sNs + "' (expected '" + CCREPDL.NAMESPACE_URI_V2 + "')");
-    return _parseElement (aRoot, aBaseUri);
+    return _parseElement (aRoot, aBaseUri, 0);
   }
 
   /**

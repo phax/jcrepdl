@@ -27,8 +27,9 @@ them, returning a three-valued result (`TRUE`, `FALSE`, `UNKNOWN`).
 12. [The benchmark](#12-the-benchmark)
 13. [Testing and the corpus suite](#13-testing-and-the-corpus-suite)
 14. [Limitations](#14-limitations)
-15. [Differences from the F# reference](#15-differences-from-the-f-reference)
-16. [License](#16-license)
+15. [Security considerations](#15-security-considerations)
+16. [Differences from the F# reference](#16-differences-from-the-f-reference)
+17. [License](#17-license)
 
 ---
 
@@ -265,7 +266,7 @@ yet")`, matching the F# reference.
 
 ## 6. What this project does
 
-A Java 21 implementation that reads CREPDL XML, expands it (resolving
+A Java 17 implementation that reads CREPDL XML, expands it (resolving
 `<ref>` chains and CREPDL-defined ISO 10646 collections), pre-builds
 repertoire dictionaries, and answers per-character / per-string queries
 with three-valued results.
@@ -411,7 +412,7 @@ verbatim.
 
 ### Requirements
 
-- **JDK 21** or newer (uses sealed interfaces, records, pattern matching for `instanceof`).
+- **JDK 17** or newer (uses sealed interfaces, records, pattern matching for `instanceof`). CI matrix: 17, 21, 25.
 - **Maven 3.9+**.
 
 ### Building
@@ -420,7 +421,7 @@ verbatim.
 mvn clean install
 ```
 
-This runs the test suite (129 tests, see [&sect;13](#13-testing-and-the-corpus-suite))
+This runs the test suite (145 tests, see [&sect;13](#13-testing-and-the-corpus-suite))
 and also runs the `forbiddenapis` Maven plugin (`check` + `testCheck` goals)
 to forbid `jdk-unsafe`, `jdk-deprecated`, `jdk-internal`, `jdk-non-portable`,
 `jdk-system-out`, and `jdk-reflection` API usage.
@@ -705,12 +706,14 @@ Sample output (default input):
 
 ## 13. Testing and the corpus suite
 
-The library ships with **129 tests** in three suites:
+The library ships with **145 tests** across six test classes:
 
 | Suite                      | Tests | What it exercises                                                                                                                       |
 | -------------------------- | ----: | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `CCREPDLTest`              |     1 | The version-string encoding helper.                                                                                                     |
-| `CREPDLValidatorTest`      |    15 | All 6 element kinds, three-valued semantics, IANA, grapheme-cluster mode, stream validation, surrogate pairs, CREPDL-script collections. |
+| `CREPDLValidatorTest`      |    16 | All 6 element kinds, three-valued semantics, IANA, grapheme-cluster mode, stream validation, surrogate pairs, CREPDL-script collections. |
+| `CodePointLiteralCharTest` |     8 | The ISO/IEC 19757-7:2020 code-point-literal `<char>` dialect (`U+XXXX`, `U+XXXX-U+YYYY`, regex fall-through).                            |
+| `CodePointSyntaxTest`      |     7 | The `CodePointSyntax` detection and translation helper in isolation.                                                                    |
 | `CREPDLBenchmarkTest`      |     4 | End-to-end smoke for the benchmark main, plus sanity assertions on three sample inputs.                                                 |
 | `CREPDLScriptsCorpusTest`  |   109 | Walks the bundled `CREPDLScripts` corpus and runs one parameterised test per file.                                                      |
 
@@ -761,11 +764,87 @@ mvn verify             # tests + forbidden-apis check + testCheck
 | `CLDR` registry not implemented.                                                                 | Use ISO 10646 collections or `<char>` regex instead.             |
 | IANA `miBenum` (numeric lookup) not implemented.                                                 | Use the IANA `name`.                                              |
 | `<repertoire registry="IVD"/>` requires the `IVD_Sequences.txt` resource on the classpath. The bundled copy is from an older Unicode revision. | Replace `src/main/resources/external/crepdl/repo/IVD/IVD_Sequences.txt` with an up-to-date copy from <https://www.unicode.org/Public/UCD/latest/ucd/IVD_Sequences.txt> and rebuild. |
-| External `<ref href="https://..."/>` requires network access at validator-build time.            | Pre-fetch and use local file URIs.                               |
+| External `<ref href="https://..."/>` is dereferenced unconditionally and synchronously at validator-build time, with no scheme allow-list, host filter, time-out, or fetch-size cap. See [&sect;15](#15-security-considerations). | Pre-fetch and use local file URIs; or do not call `CREPDLValidator.create` on documents from untrusted sources. |
+| CREPDL nesting / `<ref>`-follow / ISO-10646-collection expansion is bounded at 100 levels.       | Restructure scripts that exceed it; the limit is `MAX_NESTING_DEPTH` in `CREPDLReader` and `MAX_EXPANSION_DEPTH` in `RefAndRepertoireExpander`. |
 
 ---
 
-## 15. Differences from the F# reference
+## 15. Security considerations
+
+### 15.1 Threat model
+
+`jcrepdl` was written for **trusted CREPDL documents** &mdash; scripts
+authored in-house or vetted before processing. If you process CREPDL XML
+or candidate strings that originate from untrusted sources (HTTP request
+bodies, file uploads, third-party feeds), read the rest of this section
+before wiring it into a production path.
+
+### 15.2 What is hardened
+
+The DOM parser in `CREPDLReader._createBuilder()` runs with:
+
+- `javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING = true`
+- `disallow-doctype-decl = true` &mdash; no `<!DOCTYPE>` declarations allowed; XXE is blocked at the gate
+- `external-general-entities = false`
+- `external-parameter-entities = false`
+- `nonvalidating/load-external-dtd = false`
+- `XIncludeAware = false`
+- `setValidating(false)` &mdash; no DTD/XSD is supplied by the project, so validating mode is intentionally off
+
+A SAX `ErrorHandler` routes warnings through `LOGGER.warn` and errors
+(recoverable + fatal) through `LOGGER.error`. Errors and fatal errors
+are rethrown, so XML well-formedness violations always surface as a
+`CREPDLParseException` rather than being silently swallowed.
+
+Recursion is bounded in two places to prevent `StackOverflowError` on
+pathological input:
+
+- `CREPDLReader._parseElement` &mdash; max 100 nested CREPDL elements
+  (`MAX_NESTING_DEPTH`).
+- `RefAndRepertoireExpander._expandRecursive` &mdash; max 100 combined
+  structural children + `<ref>`-follow + ISO-10646-collection expansions
+  (`MAX_EXPANSION_DEPTH`).
+
+`<ref>` cycles and CREPDL-script-defined ISO 10646 collection cycles are
+detected independently and raise `CREPDLParseException` (see
+[&sect;16](#16-differences-from-the-f-reference)).
+
+`forbiddenapis` blocks `jdk-unsafe`, `jdk-internal`, `jdk-reflection`,
+`jdk-system-out`, and `jdk-deprecated` API surface at build time.
+
+### 15.3 Known open issues
+
+These are not mitigated by the library; callers handling untrusted input
+must address them out-of-band:
+
+1.  **Unrestricted `<ref href="…">` fetch (SSRF / local-file read).**
+    `RefAndRepertoireExpander` calls `CREPDLReader.readScript(URI)` for
+    every `<ref>`, with no scheme allow-list, host filter, time-out, or
+    fetch-size cap. A hostile script can read local files
+    (`file:///etc/passwd`), probe internal HTTP services or cloud
+    metadata endpoints, or hang the parsing thread on a slow URL. A
+    pluggable `ICREPDLRefResolver` SPI is planned. Until then, **do not
+    call `CREPDLValidator.create` on documents from untrusted sources**.
+
+2.  **ReDoS via `<char>` regex.** `CharMatcher.compile` runs the
+    `<char>` content through `java.util.regex.Pattern`, which has no
+    timeout. Adversarial regex sources (e.g. `(a+)+$`) combined with an
+    attacker-controlled candidate string can hang the JVM via
+    catastrophic backtracking. Bound input length and run matching on
+    an interruptible thread if either side is untrusted.
+
+3.  **In-memory DOM, no input-size cap.** The whole document is loaded
+    before structural checks. Pass `CREPDLReader` a pre-bounded
+    `InputStream` if document size matters.
+
+4.  **Exception messages disclose paths and URIs.** `CREPDLParseException`
+    embeds full file paths, URIs, attribute values, and the SAX
+    `systemId` (also logged by the error handler). Do not surface raw
+    exception messages to untrusted clients.
+
+---
+
+## 16. Differences from the F# reference
 
 The Java port is a faithful translation with three intentional changes:
 
@@ -809,7 +888,7 @@ semantics are 1:1.
 
 ---
 
-## 16. License
+## 17. License
 
 jcrepdl is released under the **Apache License 2.0**.  See `LICENSE` (or
 the headers in every source file) for the full text.

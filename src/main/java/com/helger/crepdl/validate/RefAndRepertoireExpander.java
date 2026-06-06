@@ -52,6 +52,13 @@ import com.helger.crepdl.repertoire.ISO10646Collections;
  */
 public final class RefAndRepertoireExpander
 {
+  // Hard ceiling on combined nesting + ref-follow + ISO-10646-collection
+  // expansion depth, to bound recursion in _expandRecursive on pathological
+  // input. Counted as the depth of the produced tree: structural children,
+  // ref-follow expansions, and CREPDL-script collection expansions each
+  // contribute one level.
+  private static final int MAX_EXPANSION_DEPTH = 100;
+
   private RefAndRepertoireExpander ()
   {}
 
@@ -76,34 +83,39 @@ public final class RefAndRepertoireExpander
   @NonNull
   private static List <ICREPDLNode> _expandChildren (@NonNull final List <ICREPDLNode> aChildren,
                                                      @NonNull final Set <URI> aRefParents,
-                                                     @NonNull final Set <RegistryISO10646> aIsoParents)
+                                                     @NonNull final Set <RegistryISO10646> aIsoParents,
+                                                     final int nDepth)
   {
     final List <ICREPDLNode> aRet = new ArrayList <> (aChildren.size ());
     for (final ICREPDLNode aChild : aChildren)
-      aRet.add (_expandRecursive (aChild, aRefParents, aIsoParents));
+      aRet.add (_expandRecursive (aChild, aRefParents, aIsoParents, nDepth));
     return aRet;
   }
 
   @NonNull
   private static ICREPDLNode _expandRecursive (@NonNull final ICREPDLNode aNode,
                                                @NonNull final Set <URI> aRefParents,
-                                               @NonNull final Set <RegistryISO10646> aIsoParents)
+                                               @NonNull final Set <RegistryISO10646> aIsoParents,
+                                               final int nDepth)
   {
+    if (nDepth > MAX_EXPANSION_DEPTH)
+      throw new CREPDLParseException ("Maximum CREPDL expansion depth of " + MAX_EXPANSION_DEPTH + " exceeded");
+
     if (aNode instanceof final CREPDLUnion aU)
       return new CREPDLUnion (aU.mode (),
                               aU.minUcsVersion (),
                               aU.maxUcsVersion (),
-                              _expandChildren (aU.children (), aRefParents, aIsoParents));
+                              _expandChildren (aU.children (), aRefParents, aIsoParents, nDepth + 1));
     if (aNode instanceof final CREPDLIntersection aI)
       return new CREPDLIntersection (aI.mode (),
                                      aI.minUcsVersion (),
                                      aI.maxUcsVersion (),
-                                     _expandChildren (aI.children (), aRefParents, aIsoParents));
+                                     _expandChildren (aI.children (), aRefParents, aIsoParents, nDepth + 1));
     if (aNode instanceof final CREPDLDifference aD)
       return new CREPDLDifference (aD.mode (),
                                    aD.minUcsVersion (),
                                    aD.maxUcsVersion (),
-                                   _expandChildren (aD.children (), aRefParents, aIsoParents));
+                                   _expandChildren (aD.children (), aRefParents, aIsoParents, nDepth + 1));
     if (aNode instanceof final CREPDLRef aR)
     {
       if (aRefParents.contains (aR.href ()))
@@ -111,7 +123,7 @@ public final class RefAndRepertoireExpander
       final ICREPDLNode aReferenced = CREPDLReader.readScript (aR.href ());
       final Set <URI> aChain = new HashSet <> (aRefParents);
       aChain.add (aR.href ());
-      final ICREPDLNode aExpanded = _expandRecursive (aReferenced, aChain, aIsoParents);
+      final ICREPDLNode aExpanded = _expandRecursive (aReferenced, aChain, aIsoParents, nDepth + 1);
       return new CREPDLRef (aR.mode (), aR.minUcsVersion (), aR.maxUcsVersion (), aR.href (), List.of (aExpanded));
     }
     if (aNode instanceof final CREPDLRepertoire aRep && aRep.registry () instanceof final RegistryISO10646 aIso)
@@ -139,15 +151,11 @@ public final class RefAndRepertoireExpander
         }
         final Set <RegistryISO10646> aChain = new HashSet <> (aIsoParents);
         aChain.add (aIso);
-        return _expandRecursive (aSub, aRefParents, aChain);
+        return _expandRecursive (aSub, aRefParents, aChain, nDepth + 1);
       }
     }
     return aNode;
   }
-
-  // ----------------------------------------------------------------------
-  // Public API
-  // ----------------------------------------------------------------------
 
   /**
    * Expand the given root tree.
@@ -159,6 +167,6 @@ public final class RefAndRepertoireExpander
   @NonNull
   public static ICREPDLNode expand (@NonNull final ICREPDLNode aRoot)
   {
-    return _expandRecursive (aRoot, new HashSet <> (), new HashSet <> ());
+    return _expandRecursive (aRoot, new HashSet <> (), new HashSet <> (), 0);
   }
 }
