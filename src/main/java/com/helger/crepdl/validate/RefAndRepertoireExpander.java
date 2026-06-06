@@ -84,11 +84,12 @@ public final class RefAndRepertoireExpander
   private static List <ICREPDLNode> _expandChildren (@NonNull final List <ICREPDLNode> aChildren,
                                                      @NonNull final Set <URI> aRefParents,
                                                      @NonNull final Set <RegistryISO10646> aIsoParents,
+                                                     @NonNull final ICREPDLRefResolver aResolver,
                                                      final int nDepth)
   {
     final List <ICREPDLNode> aRet = new ArrayList <> (aChildren.size ());
     for (final ICREPDLNode aChild : aChildren)
-      aRet.add (_expandRecursive (aChild, aRefParents, aIsoParents, nDepth));
+      aRet.add (_expandRecursive (aChild, aRefParents, aIsoParents, aResolver, nDepth));
     return aRet;
   }
 
@@ -96,6 +97,7 @@ public final class RefAndRepertoireExpander
   private static ICREPDLNode _expandRecursive (@NonNull final ICREPDLNode aNode,
                                                @NonNull final Set <URI> aRefParents,
                                                @NonNull final Set <RegistryISO10646> aIsoParents,
+                                               @NonNull final ICREPDLRefResolver aResolver,
                                                final int nDepth)
   {
     if (nDepth > MAX_EXPANSION_DEPTH)
@@ -105,27 +107,45 @@ public final class RefAndRepertoireExpander
       return new CREPDLUnion (aU.mode (),
                               aU.minUcsVersion (),
                               aU.maxUcsVersion (),
-                              _expandChildren (aU.children (), aRefParents, aIsoParents, nDepth + 1));
+                              _expandChildren (aU.children (), aRefParents, aIsoParents, aResolver, nDepth + 1));
+
     if (aNode instanceof final CREPDLIntersection aI)
       return new CREPDLIntersection (aI.mode (),
                                      aI.minUcsVersion (),
                                      aI.maxUcsVersion (),
-                                     _expandChildren (aI.children (), aRefParents, aIsoParents, nDepth + 1));
+                                     _expandChildren (aI.children (), aRefParents, aIsoParents, aResolver, nDepth + 1));
+
     if (aNode instanceof final CREPDLDifference aD)
       return new CREPDLDifference (aD.mode (),
                                    aD.minUcsVersion (),
                                    aD.maxUcsVersion (),
-                                   _expandChildren (aD.children (), aRefParents, aIsoParents, nDepth + 1));
+                                   _expandChildren (aD.children (), aRefParents, aIsoParents, aResolver, nDepth + 1));
+
     if (aNode instanceof final CREPDLRef aR)
     {
+      // Cycle detection runs before the resolver is consulted, so a
+      // cyclic ref is reported as such instead of bouncing off the
+      // resolver as "unknown" or being silently looped.
       if (aRefParents.contains (aR.href ()))
         throw new CREPDLParseException ("Loop caused by <ref> elements at '" + aR.href () + "'");
-      final ICREPDLNode aReferenced = CREPDLReader.readScript (aR.href ());
+      final ICREPDLNode aReferenced;
+      try (final CREPDLRefSource aSource = aResolver.resolve (aR.href ()))
+      {
+        aReferenced = CREPDLReader.readScript (aSource.stream (), aSource.baseUri ());
+      }
+      catch (final IOException ex)
+      {
+        // CREPDLReader.readScript wraps its own IO errors as
+        // CREPDLParseException, so this catch only fires when the
+        // resolver-owned stream fails to close cleanly.
+        throw new CREPDLParseException ("Failed to close ref source for '" + aR.href () + "'", ex);
+      }
       final Set <URI> aChain = new HashSet <> (aRefParents);
       aChain.add (aR.href ());
-      final ICREPDLNode aExpanded = _expandRecursive (aReferenced, aChain, aIsoParents, nDepth + 1);
+      final ICREPDLNode aExpanded = _expandRecursive (aReferenced, aChain, aIsoParents, aResolver, nDepth + 1);
       return new CREPDLRef (aR.mode (), aR.minUcsVersion (), aR.maxUcsVersion (), aR.href (), List.of (aExpanded));
     }
+
     if (aNode instanceof final CREPDLRepertoire aRep && aRep.registry () instanceof final RegistryISO10646 aIso)
     {
       final String sResource = _findCREPDLScript (aIso);
@@ -138,6 +158,9 @@ public final class RefAndRepertoireExpander
           // FALSE for every input), which is correct: union(X, Y, X) == union(X, Y).
           return new CREPDLUnion (aRep.mode (), aRep.minUcsVersion (), aRep.maxUcsVersion (), List.of ());
         }
+        // The bundled CREPDL-script collections are loaded directly from
+        // the classpath, bypassing the user-supplied resolver. They are
+        // trusted shipped data.
         final ICREPDLNode aSub;
         try (final InputStream aIS = RefAndRepertoireExpander.class.getResourceAsStream (sResource))
         {
@@ -151,14 +174,16 @@ public final class RefAndRepertoireExpander
         }
         final Set <RegistryISO10646> aChain = new HashSet <> (aIsoParents);
         aChain.add (aIso);
-        return _expandRecursive (aSub, aRefParents, aChain, nDepth + 1);
+        return _expandRecursive (aSub, aRefParents, aChain, aResolver, nDepth + 1);
       }
     }
     return aNode;
   }
 
   /**
-   * Expand the given root tree.
+   * Expand the given root tree using the default {@link DenyAllRefResolver}. Any
+   * <code>&lt;ref&gt;</code> in the input raises a {@link CREPDLParseException}. Use
+   * {@link #expand(ICREPDLNode, ICREPDLRefResolver)} to allow refs through a specific resolver.
    *
    * @param aRoot
    *        Original tree. Never <code>null</code>.
@@ -167,6 +192,22 @@ public final class RefAndRepertoireExpander
   @NonNull
   public static ICREPDLNode expand (@NonNull final ICREPDLNode aRoot)
   {
-    return _expandRecursive (aRoot, new HashSet <> (), new HashSet <> (), 0);
+    return expand (aRoot, DenyAllRefResolver.INSTANCE);
+  }
+
+  /**
+   * Expand the given root tree, routing every <code>&lt;ref&gt;</code> URI through the given
+   * resolver.
+   *
+   * @param aRoot
+   *        Original tree. Never <code>null</code>.
+   * @param aResolver
+   *        Ref resolver. Never <code>null</code>.
+   * @return Expanded tree. Never <code>null</code>.
+   */
+  @NonNull
+  public static ICREPDLNode expand (@NonNull final ICREPDLNode aRoot, @NonNull final ICREPDLRefResolver aResolver)
+  {
+    return _expandRecursive (aRoot, new HashSet <> (), new HashSet <> (), aResolver, 0);
   }
 }

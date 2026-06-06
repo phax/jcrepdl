@@ -421,7 +421,7 @@ verbatim.
 mvn clean install
 ```
 
-This runs the test suite (145 tests, see [&sect;13](#13-testing-and-the-corpus-suite))
+This runs the test suite (152 tests, see [&sect;13](#13-testing-and-the-corpus-suite))
 and also runs the `forbiddenapis` Maven plugin (`check` + `testCheck` goals)
 to forbid `jdk-unsafe`, `jdk-deprecated`, `jdk-internal`, `jdk-non-portable`,
 `jdk-system-out`, and `jdk-reflection` API usage.
@@ -485,6 +485,11 @@ CREPDLValidator a4 = CREPDLValidator.createFromString (sXml, URI.create ("base:/
 // From a Reader or InputStream (use CREPDLReader directly)
 CREPDLValidator a5 = CREPDLValidator.create (CREPDLReader.readScript (aReader, null));
 ```
+
+Every `create(...)` overload above uses `DenyAllRefResolver` &mdash; scripts
+containing `<ref href="..."/>` will fail to build. To allow refs, pass an
+explicit `ICREPDLRefResolver` (see [&sect;11.6](#116-composing-via-ref) and
+[&sect;15.2](#152-what-is-hardened) for the bundled resolvers).
 
 ### 10.2 Validating a single character
 
@@ -634,6 +639,18 @@ Or equivalently via IANA round-trip:
 </union>
 ```
 
+```java
+// Building the validator requires an explicit resolver because the
+// default DenyAllRefResolver would refuse the three <ref> URIs above.
+import com.helger.crepdl.validate.CREPDLValidator;
+import com.helger.crepdl.validate.FileSystemRefResolver;
+import java.nio.file.Path;
+
+CREPDLValidator v = CREPDLValidator.create (
+    Path.of ("scripts/Top.crepdl").toUri (),
+    new FileSystemRefResolver (Path.of ("scripts")));
+```
+
 `<ref>` cycles are detected at expansion time and raise a parse error.
 
 ---
@@ -706,7 +723,7 @@ Sample output (default input):
 
 ## 13. Testing and the corpus suite
 
-The library ships with **145 tests** across six test classes:
+The library ships with **152 tests** across seven test classes:
 
 | Suite                      | Tests | What it exercises                                                                                                                       |
 | -------------------------- | ----: | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -714,6 +731,7 @@ The library ships with **145 tests** across six test classes:
 | `CREPDLValidatorTest`      |    16 | All 6 element kinds, three-valued semantics, IANA, grapheme-cluster mode, stream validation, surrogate pairs, CREPDL-script collections. |
 | `CodePointLiteralCharTest` |     8 | The ISO/IEC 19757-7:2020 code-point-literal `<char>` dialect (`U+XXXX`, `U+XXXX-U+YYYY`, regex fall-through).                            |
 | `CodePointSyntaxTest`      |     7 | The `CodePointSyntax` detection and translation helper in isolation.                                                                    |
+| `RefResolverTest`          |     7 | The `<ref>` resolver SPI: deny-all default, file-system sandbox, traversal-escape rejection, non-file scheme rejection, end-to-end.      |
 | `CREPDLBenchmarkTest`      |     4 | End-to-end smoke for the benchmark main, plus sanity assertions on three sample inputs.                                                 |
 | `CREPDLScriptsCorpusTest`  |   109 | Walks the bundled `CREPDLScripts` corpus and runs one parameterised test per file.                                                      |
 
@@ -764,7 +782,7 @@ mvn verify             # tests + forbidden-apis check + testCheck
 | `CLDR` registry not implemented.                                                                 | Use ISO 10646 collections or `<char>` regex instead.             |
 | IANA `miBenum` (numeric lookup) not implemented.                                                 | Use the IANA `name`.                                              |
 | `<repertoire registry="IVD"/>` requires the `IVD_Sequences.txt` resource on the classpath. The bundled copy is from an older Unicode revision. | Replace `src/main/resources/external/crepdl/repo/IVD/IVD_Sequences.txt` with an up-to-date copy from <https://www.unicode.org/Public/UCD/latest/ucd/IVD_Sequences.txt> and rebuild. |
-| External `<ref href="https://..."/>` is dereferenced unconditionally and synchronously at validator-build time, with no scheme allow-list, host filter, time-out, or fetch-size cap. See [&sect;15](#15-security-considerations). | Pre-fetch and use local file URIs; or do not call `CREPDLValidator.create` on documents from untrusted sources. |
+| `<ref href="..."/>` URIs are routed through an `ICREPDLRefResolver`. The default `DenyAllRefResolver` refuses every ref; scripts that use `<ref>` must opt into a permissive resolver via the `CREPDLValidator.create(..., resolver)` overloads. See [&sect;15](#15-security-considerations). | Pass `FileSystemRefResolver(root)` for trusted local-file refs, or `UnrestrictedRefResolver.INSTANCE` for the legacy "fetch anything" behaviour. |
 | CREPDL nesting / `<ref>`-follow / ISO-10646-collection expansion is bounded at 100 levels.       | Restructure scripts that exceed it; the limit is `MAX_NESTING_DEPTH` in `CREPDLReader` and `MAX_EXPANSION_DEPTH` in `RefAndRepertoireExpander`. |
 
 ---
@@ -809,6 +827,25 @@ pathological input:
 detected independently and raise `CREPDLParseException` (see
 [&sect;16](#16-differences-from-the-f-reference)).
 
+Every `<ref href="...">` URI is routed through an
+`ICREPDLRefResolver` (in `com.helger.crepdl.validate`). Implementations
+shipped with the library:
+
+| Resolver                  | Policy                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `DenyAllRefResolver`      | Refuses every URI. **This is the default** for every `CREPDLValidator.create(...)` overload that does not take a resolver. |
+| `FileSystemRefResolver`   | Accepts only `file:` URIs whose absolute, normalised path lies under a caller-supplied root directory. |
+| `UnrestrictedRefResolver` | Dereferences any scheme the JVM's URL handlers understand (`file:`, `http:`, `https:`, `jar:`, ...). Preserves the pre-SPI behaviour; **unsafe for untrusted input**. |
+
+Use the `CREPDLValidator.create(..., ICREPDLRefResolver)` overloads to
+opt into a permissive resolver, e.g.:
+
+```java
+CREPDLValidator v = CREPDLValidator.create (
+    URI.create ("file:/srv/crepdl/top.crepdl"),
+    new FileSystemRefResolver (Path.of ("/srv/crepdl")));
+```
+
 `forbiddenapis` blocks `jdk-unsafe`, `jdk-internal`, `jdk-reflection`,
 `jdk-system-out`, and `jdk-deprecated` API surface at build time.
 
@@ -817,30 +854,26 @@ detected independently and raise `CREPDLParseException` (see
 These are not mitigated by the library; callers handling untrusted input
 must address them out-of-band:
 
-1.  **Unrestricted `<ref href="…">` fetch (SSRF / local-file read).**
-    `RefAndRepertoireExpander` calls `CREPDLReader.readScript(URI)` for
-    every `<ref>`, with no scheme allow-list, host filter, time-out, or
-    fetch-size cap. A hostile script can read local files
-    (`file:///etc/passwd`), probe internal HTTP services or cloud
-    metadata endpoints, or hang the parsing thread on a slow URL. A
-    pluggable `ICREPDLRefResolver` SPI is planned. Until then, **do not
-    call `CREPDLValidator.create` on documents from untrusted sources**.
-
-2.  **ReDoS via `<char>` regex.** `CharMatcher.compile` runs the
+1.  **ReDoS via `<char>` regex.** `CharMatcher.compile` runs the
     `<char>` content through `java.util.regex.Pattern`, which has no
     timeout. Adversarial regex sources (e.g. `(a+)+$`) combined with an
     attacker-controlled candidate string can hang the JVM via
     catastrophic backtracking. Bound input length and run matching on
     an interruptible thread if either side is untrusted.
 
-3.  **In-memory DOM, no input-size cap.** The whole document is loaded
+2.  **In-memory DOM, no input-size cap.** The whole document is loaded
     before structural checks. Pass `CREPDLReader` a pre-bounded
     `InputStream` if document size matters.
 
-4.  **Exception messages disclose paths and URIs.** `CREPDLParseException`
+3.  **Exception messages disclose paths and URIs.** `CREPDLParseException`
     embeds full file paths, URIs, attribute values, and the SAX
     `systemId` (also logged by the error handler). Do not surface raw
     exception messages to untrusted clients.
+
+4.  **`UnrestrictedRefResolver` re-introduces the SSRF surface** if
+    selected (no scheme allow-list, no host filter, no time-out, no
+    fetch-size cap). Use it only when every CREPDL document fed to the
+    validator originates from a trusted source.
 
 ---
 

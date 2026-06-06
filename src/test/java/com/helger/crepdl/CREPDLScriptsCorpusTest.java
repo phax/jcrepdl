@@ -45,6 +45,8 @@ import org.slf4j.LoggerFactory;
 import com.helger.crepdl.parse.CREPDLParseException;
 import com.helger.crepdl.parse.CREPDLReader;
 import com.helger.crepdl.validate.CREPDLValidator;
+import com.helger.crepdl.validate.FileSystemRefResolver;
+import com.helger.crepdl.validate.ICREPDLRefResolver;
 
 /**
  * Corpus tests that exercise the bundled
@@ -218,7 +220,7 @@ final class CREPDLScriptsCorpusTest
 
       try
       {
-        CREPDLValidator.create (aFile.toUri ());
+        CREPDLValidator.create (aFile.toUri (), _corpusResolver ());
         nBuilt++;
       }
       catch (final RuntimeException ex)
@@ -257,7 +259,8 @@ final class CREPDLScriptsCorpusTest
     // (default macOS APFS) it resolves to itself and the cycle detector trips.
     // Either way, building a validator MUST fail with a parse exception.
     final CREPDLParseException ex = org.junit.jupiter.api.Assertions.assertThrows (CREPDLParseException.class,
-                                                                                   () -> CREPDLValidator.create (aRefLoop.toUri ()));
+                                                                                   () -> CREPDLValidator.create (aRefLoop.toUri (),
+                                                                                                                 _corpusResolver ()));
     assertNotNull (ex.getMessage ());
   }
 
@@ -299,6 +302,12 @@ final class CREPDLScriptsCorpusTest
   // ----------------------------------------------------------------------
   // helpers
   // ----------------------------------------------------------------------
+
+  private static ICREPDLRefResolver _corpusResolver ()
+  {
+    // Bundled corpus is trusted test data; sandbox refs to the corpus root.
+    return new FileSystemRefResolver (_corpusRoot ());
+  }
 
   private static Path _corpusRoot ()
   {

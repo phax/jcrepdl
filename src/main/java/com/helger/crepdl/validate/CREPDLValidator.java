@@ -94,6 +94,10 @@ public final class CREPDLValidator
   // ----------------------------------------------------------------------
 
   /**
+   * Build a validator from an already-parsed CREPDL root, refusing every
+   * <code>&lt;ref&gt;</code> via {@link DenyAllRefResolver}. Use
+   * {@link #create(ICREPDLNode, ICREPDLRefResolver)} to allow refs.
+   *
    * @param aRoot
    *        Already-parsed CREPDL root. Never <code>null</code>.
    * @return A fresh validator. Never <code>null</code>.
@@ -101,10 +105,29 @@ public final class CREPDLValidator
   @NonNull
   public static CREPDLValidator create (@NonNull final ICREPDLNode aRoot)
   {
-    return new CREPDLValidator (RefAndRepertoireExpander.expand (aRoot));
+    return create (aRoot, DenyAllRefResolver.INSTANCE);
   }
 
   /**
+   * Build a validator from an already-parsed CREPDL root, routing every
+   * <code>&lt;ref&gt;</code> URI through the given resolver.
+   *
+   * @param aRoot
+   *        Already-parsed CREPDL root. Never <code>null</code>.
+   * @param aResolver
+   *        Ref resolver. Never <code>null</code>.
+   * @return A fresh validator. Never <code>null</code>.
+   */
+  @NonNull
+  public static CREPDLValidator create (@NonNull final ICREPDLNode aRoot,
+                                        @NonNull final ICREPDLRefResolver aResolver)
+  {
+    return new CREPDLValidator (RefAndRepertoireExpander.expand (aRoot, aResolver));
+  }
+
+  /**
+   * Build a validator from a local file, refusing every <code>&lt;ref&gt;</code>.
+   *
    * @param aFile
    *        CREPDL script file. Never <code>null</code>.
    * @return A fresh validator.
@@ -112,10 +135,28 @@ public final class CREPDLValidator
   @NonNull
   public static CREPDLValidator create (@NonNull final File aFile)
   {
-    return create (CREPDLReader.readScript (aFile.toURI ()));
+    return create (aFile, DenyAllRefResolver.INSTANCE);
   }
 
   /**
+   * Build a validator from a local file, routing every <code>&lt;ref&gt;</code>
+   * URI through the given resolver.
+   *
+   * @param aFile
+   *        CREPDL script file. Never <code>null</code>.
+   * @param aResolver
+   *        Ref resolver. Never <code>null</code>.
+   * @return A fresh validator.
+   */
+  @NonNull
+  public static CREPDLValidator create (@NonNull final File aFile, @NonNull final ICREPDLRefResolver aResolver)
+  {
+    return create (CREPDLReader.readScript (aFile.toURI ()), aResolver);
+  }
+
+  /**
+   * Build a validator from a URI, refusing every <code>&lt;ref&gt;</code>.
+   *
    * @param aUri
    *        Absolute URI of the script. Never <code>null</code>.
    * @return A fresh validator.
@@ -123,10 +164,31 @@ public final class CREPDLValidator
   @NonNull
   public static CREPDLValidator create (@NonNull final URI aUri)
   {
-    return create (CREPDLReader.readScript (aUri));
+    return create (aUri, DenyAllRefResolver.INSTANCE);
   }
 
   /**
+   * Build a validator from a URI, routing every <code>&lt;ref&gt;</code> URI in
+   * the loaded script through the given resolver. The top-level URI is loaded
+   * directly (it is supplied by the caller and considered trusted); only nested
+   * <code>&lt;ref&gt;</code> URIs go through the resolver.
+   *
+   * @param aUri
+   *        Absolute URI of the script. Never <code>null</code>.
+   * @param aResolver
+   *        Ref resolver. Never <code>null</code>.
+   * @return A fresh validator.
+   */
+  @NonNull
+  public static CREPDLValidator create (@NonNull final URI aUri, @NonNull final ICREPDLRefResolver aResolver)
+  {
+    return create (CREPDLReader.readScript (aUri), aResolver);
+  }
+
+  /**
+   * Build a validator from an in-memory string, refusing every
+   * <code>&lt;ref&gt;</code>.
+   *
    * @param sXml
    *        XML source. Never <code>null</code>.
    * @param aBaseUri
@@ -136,7 +198,27 @@ public final class CREPDLValidator
   @NonNull
   public static CREPDLValidator createFromString (@NonNull final String sXml, @Nullable final URI aBaseUri)
   {
-    return create (CREPDLReader.readScriptFromString (sXml, aBaseUri));
+    return createFromString (sXml, aBaseUri, DenyAllRefResolver.INSTANCE);
+  }
+
+  /**
+   * Build a validator from an in-memory string, routing every
+   * <code>&lt;ref&gt;</code> URI through the given resolver.
+   *
+   * @param sXml
+   *        XML source. Never <code>null</code>.
+   * @param aBaseUri
+   *        Optional base URI for ref resolution.
+   * @param aResolver
+   *        Ref resolver. Never <code>null</code>.
+   * @return A fresh validator.
+   */
+  @NonNull
+  public static CREPDLValidator createFromString (@NonNull final String sXml,
+                                                  @Nullable final URI aBaseUri,
+                                                  @NonNull final ICREPDLRefResolver aResolver)
+  {
+    return create (CREPDLReader.readScriptFromString (sXml, aBaseUri), aResolver);
   }
 
   // ----------------------------------------------------------------------
