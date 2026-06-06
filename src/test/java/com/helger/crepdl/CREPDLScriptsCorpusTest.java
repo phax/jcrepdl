@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -133,9 +134,12 @@ final class CREPDLScriptsCorpusTest
       final CREPDLParseException ex = assertThrows (CREPDLParseException.class,
                                                     () -> CREPDLReader.readScript (aFile.toUri ()));
       assertNotNull (ex.getMessage ());
-      return;
     }
-    CREPDLReader.readScript (aFile.toUri ());
+    else
+    {
+      // Must be readable
+      CREPDLReader.readScript (aFile.toUri ());
+    }
   }
 
   @ParameterizedTest (name = "v2 graphemeClusterMode parse: {0}")
@@ -197,6 +201,8 @@ final class CREPDLScriptsCorpusTest
     aAll.addAll (_collect (_corpusRoot ().resolve ("version2/graphemeClusterMode")));
     assertFalse (aAll.isEmpty (), "no v2 scripts found");
 
+    aAll.forEach (x -> LOGGER.info (x.toString ()));
+
     final List <String> aUnexpectedFailures = new ArrayList <> ();
     int nBuilt = 0;
     int nExpectedSkipped = 0;
@@ -208,6 +214,7 @@ final class CREPDLScriptsCorpusTest
         nExpectedSkipped++;
         continue;
       }
+
       try
       {
         CREPDLValidator.create (aFile.toUri ());
@@ -218,6 +225,7 @@ final class CREPDLScriptsCorpusTest
         aUnexpectedFailures.add (sName + ": " + ex.getClass ().getSimpleName () + ": " + ex.getMessage ());
       }
     }
+
     if (!aUnexpectedFailures.isEmpty ())
     {
       fail (aUnexpectedFailures.size () +
@@ -296,6 +304,7 @@ final class CREPDLScriptsCorpusTest
     final URL aURL = CREPDLScriptsCorpusTest.class.getResource (CORPUS_ROOT);
     if (aURL == null)
       throw new IllegalStateException ("Test corpus not on classpath '" + CORPUS_ROOT + "'");
+
     try
     {
       return new File (aURL.toURI ()).toPath ();
@@ -310,13 +319,14 @@ final class CREPDLScriptsCorpusTest
   {
     if (!Files.isDirectory (aDir))
       return List.of ();
+
     try (final Stream <Path> aStream = Files.list (aDir))
     {
       return aStream.filter (p -> p.toString ().endsWith (".crepdl"))
                     .sorted (Comparator.comparing (p -> p.getFileName ().toString ()))
                     .toList ();
     }
-    catch (final java.io.IOException ex)
+    catch (final IOException ex)
     {
       throw new IllegalStateException (ex);
     }
