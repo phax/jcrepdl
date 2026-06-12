@@ -30,6 +30,7 @@ them, returning a three-valued result (`TRUE`, `FALSE`, `UNKNOWN`).
 15. [Security considerations](#15-security-considerations)
 16. [Differences from the F# reference](#16-differences-from-the-f-reference)
 17. [License](#17-license)
+18. [News and noteworthy](#18-news-and-noteworthy)
 
 ---
 
@@ -937,6 +938,89 @@ Bundled data files derived from
 and ISO/IEC 10646 collection definitions are subject to their respective
 upstream terms (Unicode Consortium License and ISO/IEC respectively); they
 are redistributed here in the form they were shipped in the F# project.
+
+---
+
+## 18. News and noteworthy
+
+v1.0.0 - 2026-06-12
+* Initial public release. Java 17 port of the F# CREPDL reference implementation (`CITPCSHARE/CREPDL`, branch `Version2`).
+
+**Core**
+
+- Full CREPDL v2.0 vocabulary: `<union>`, `<intersection>`, `<difference>`,
+  `<ref>`, `<repertoire>`, `<char>` (plus `<kernel>` / `<hull>`).
+- Three-valued result (`TRUE` / `FALSE` / `UNKNOWN`) surfaced as
+  `ECREPDLValidationResult`; per-character and per-string/stream APIs on
+  `CREPDLValidator`.
+- Two evaluation modes: `EMode.CHARACTER` (Unicode code points, BMP +
+  surrogate pairs) and `EMode.GRAPHEME_CLUSTER` (UAX #29 via
+  `java.text.BreakIterator`).
+- Sealed AST hierarchy (`ICREPDLNode` + six records) and sealed registry
+  hierarchy (`IRegistry` + four records).
+
+**Registries**
+
+- `registry="10646"` &mdash; 323 inline + 44 out-of-line + 35
+  CREPDL-script-defined ISO/IEC 10646 collections bundled, including
+  Unicode age collections up to and including 17.0.
+- `registry="IANA"` &mdash; round-trip via `java.nio.charset.Charset`
+  (`name` only; `miBenum` not supported, matching the F# reference).
+- `registry="IVD"` &mdash; Adobe-Japan1 et al. validated against the
+  bundled `IVD_Sequences.txt`.
+- `registry="CLDR"` &mdash; recognised at parse time but intentionally
+  rejected with `CREPDLParseException("CLDR is not supported yet")`,
+  matching the F# reference.
+
+**`<char>` content dialects**
+
+- F# v2.0 ICU-flavoured regex (run through `java.util.regex.Pattern` with
+  `COMMENTS | UNICODE_CHARACTER_CLASS`).
+- ISO/IEC 19757-7:2020 code-point-literal syntax (`U+XXXX`,
+  `U+XXXX-U+YYYY`, whitespace-separated unions); detected by
+  `CodePointSyntax.toRegexOrNull` and translated transparently.
+- Cross-validated against the SignalArc CREPDL&middot;CHECK service.
+
+**Reference resolution and recursion bounds**
+
+- `ICREPDLRefResolver` SPI for `<ref href="...">` resolution, with three
+  bundled implementations: `DenyAllRefResolver` (default, refuses every
+  URI), `FileSystemRefResolver` (sandbox under a caller-supplied root,
+  rejects traversal escapes and non-`file:` schemes), and
+  `UnrestrictedRefResolver` (legacy "fetch anything" behaviour).
+- `<ref>` cycles and ISO 10646 CREPDL-script-collection cycles tracked
+  independently; the F# reference only tracks the former and would
+  stack-overflow on collection 283 (MODERN EUROPEAN SCRIPTS).
+- Recursion depth bounded at 100 levels in two places
+  (`MAX_NESTING_DEPTH` in `CREPDLReader`, `MAX_EXPANSION_DEPTH` in
+  `RefAndRepertoireExpander`) to prevent `StackOverflowError` on
+  pathological input.
+
+**Hardened XML parsing**
+
+- DOM parser configured with `FEATURE_SECURE_PROCESSING`,
+  `disallow-doctype-decl`, external general and parameter entities off,
+  external DTD loading off, `XIncludeAware=false`. XXE is blocked at the
+  gate.
+- SAX `ErrorHandler` routes warnings through `LOGGER.warn` and errors /
+  fatal errors through `LOGGER.error` and rethrows them as
+  `CREPDLParseException`.
+
+**Build and tooling**
+
+- Maven build via `com.helger:parent-pom:3.0.5`; CI matrix on JDK 17, 21,
+  and 25; snapshot deploy on JDK 17.
+- `forbiddenapis` enforced (`jdk-unsafe`, `jdk-deprecated`,
+  `jdk-internal`, `jdk-non-portable`, `jdk-system-out`,
+  `jdk-reflection`); only `CREPDLBenchmark*` is excluded.
+- Production classpath logs through `slf4j-api` only; no SLF4J binding is
+  pulled in transitively.
+- Runnable `CREPDLBenchmark` main with three sections (lookups,
+  verifications, and coverage assessment for an arbitrary text on three
+  scales: block/plane, Unicode age, IANA charset).
+- 152-test suite across seven classes, including a 109-entry
+  parameterised corpus walk over the upstream `CREPDLScripts`
+  repository.
 
 ---
 
