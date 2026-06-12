@@ -1,5 +1,12 @@
 # jcrepdl
 
+<!-- ph-badge-start -->
+[![Sonatype Central](https://maven-badges.sml.io/sonatype-central/com.helger.crepdl/jcrepdl/badge.svg)](https://maven-badges.sml.io/sonatype-central/com.helger.crepdl/jcrepdl/)
+[![javadoc](https://javadoc.io/badge2/com.helger.crepdl/jcrepdl/javadoc.svg)](https://javadoc.io/doc/com.helger.crepdl/jcrepdl)
+
+> If this project saved you some time or made your day a little easier, a star would mean a lot &mdash; it helps others find it too.
+<!-- ph-badge-end -->
+
 A Java 17 implementation of **ISO/IEC 19757-7** &mdash; the *Character Repertoire
 Description Language* (CREPDL).
 
@@ -8,6 +15,18 @@ This is a from-scratch Java port of the F# reference implementation by
 `Version2`).  The library can parse CREPDL XML scripts, expand them, and
 evaluate arbitrary characters / grapheme clusters / strings / streams against
 them, returning a three-valued result (`TRUE`, `FALSE`, `UNKNOWN`).
+
+## Maven usage
+
+Add the following to your `pom.xml`, where `x.y.z` is the latest released version:
+
+```xml
+<dependency>
+  <groupId>com.helger.crepdl</groupId>
+  <artifactId>jcrepdl</artifactId>
+  <version>x.y.z</version>
+</dependency>
+```
 
 ---
 
