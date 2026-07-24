@@ -32,7 +32,8 @@ Public facade is `com.helger.crepdl.validate.CREPDLValidator` — build it from 
 
 - `.crepdl` files are tracked as **binary** (`.gitattributes`). Do not try to read them as text or include them in textual diffs — open them with a hex/byte view if you need to inspect bytes.
 - Bundled CREPDL fixtures and ranges live under `src/main/resources/external/crepdl/repo/` (~85 files, includes a ~1.3 MB `IVD_Sequences.txt`). Treat these as vendored data — update deliberately, not as cleanup.
-- Tests use **JUnit 5 (Jupiter 5.11.3)**. No Hamcrest, no AssertJ — stay on Jupiter assertions to match the existing suites.
+- **The IVD data (`IVD/IVD_Sequences.txt`) is not pinned to the F# reference implementation.** Newer revisions are taken directly from the upstream Unicode source (`https://www.unicode.org/ivd/data/<date>/IVD_Sequences.txt`). The file format is stable (`sequence;collection;name`, three semicolon-separated fields per data line — see `IVDRepertoires`), so a newer revision drops in without code changes: existing collections gain sequences and new collections (e.g. `CAAPH` in the 2025-07-14 revision) become resolvable automatically. When bumping it, note the new date in the README's "News and noteworthy" section.
+- Tests use **JUnit 6 (Jupiter 6.1.2)**. No Hamcrest, no AssertJ — stay on Jupiter assertions to match the existing suites.
 
 ## Style
 

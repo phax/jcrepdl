@@ -962,6 +962,12 @@ are redistributed here in the form they were shipped in the F# project.
 
 ## 18. News and noteworthy
 
+v1.0.1 - work in progress
+* Updated the bundled Ideographic Variation Database (`IVD_Sequences.txt`)
+  from the 2017-12-12 revision to the official upstream 2025-07-14 revision.
+  This adds the new `CAAPH` collection and the additional `Adobe-Japan1`
+  sequences registered on 2022-09-13.
+
 v1.0.0 - 2026-06-12
 * Initial public release. Java 17 port of the F# CREPDL reference implementation (`CITPCSHARE/CREPDL`, branch `Version2`).
 
