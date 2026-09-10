@@ -28,9 +28,9 @@ import com.helger.crepdl.model.CREPDLChar;
 /**
  * Evaluates {@link CREPDLChar} nodes against a candidate string. Uses
  * <code>java.util.regex.Pattern</code> with {@link Pattern#COMMENTS} and
- * {@link Pattern#UNICODE_CHARACTER_CLASS} so that whitespace in CREPDL regex
- * sources and <code>\p{...}</code> Unicode properties behave like the F#
- * reference implementation that uses ICU's <code>COMMENTS</code> regex flag.
+ * {@link Pattern#UNICODE_CHARACTER_CLASS} so that whitespace in CREPDL regex sources and
+ * <code>\p{...}</code> Unicode properties behave like the F# reference implementation that uses
+ * ICU's <code>COMMENTS</code> regex flag.
  *
  * @author Philip Helger
  */
@@ -43,8 +43,7 @@ public final class CharMatcher
    * Compile a CREPDL char-element regex source.
    *
    * @param sRegex
-   *        Regex source text. May be <code>null</code>; the result is then
-   *        also <code>null</code>.
+   *        Regex source text. May be <code>null</code>; the result is then also <code>null</code>.
    * @return Compiled pattern or <code>null</code>.
    * @throws IllegalArgumentException
    *         if the regex is invalid.

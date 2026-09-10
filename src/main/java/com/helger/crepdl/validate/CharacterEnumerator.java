@@ -24,9 +24,8 @@ import java.util.Iterator;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Reads a stream of Unicode characters, yielding each non-surrogate as a
- * single-char string and each surrogate pair as a two-char string. Mirrors
- * <code>ReadCharacter.fs</code>.
+ * Reads a stream of Unicode characters, yielding each non-surrogate as a single-char string and
+ * each surrogate pair as a two-char string. Mirrors <code>ReadCharacter.fs</code>.
  *
  * @author Philip Helger
  */

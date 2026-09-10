@@ -21,8 +21,7 @@ import org.jspecify.annotations.NonNull;
 import com.helger.crepdl.EThreeValuedBoolean;
 
 /**
- * A character repertoire. Calls {@link #check(String)} per character / grapheme
- * cluster string.
+ * A character repertoire. Calls {@link #check(String)} per character / grapheme cluster string.
  *
  * @author Philip Helger
  */

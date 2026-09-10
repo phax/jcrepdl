@@ -25,16 +25,13 @@ import org.jspecify.annotations.NonNull;
 import com.helger.crepdl.parse.CREPDLParseException;
 
 /**
- * Dereferences any URI through {@link URI#toURL()} and {@link URL#openStream()}.
- * Preserves the pre-SPI behaviour of the expander: any scheme the JVM's URL
- * handlers understand (file, http, https, jar, ...) is fetched with no
- * allow-list, host filter, timeout, or size cap.
- *
+ * Dereferences any URI through {@link URI#toURL()} and {@link URL#openStream()}. Preserves the
+ * pre-SPI behaviour of the expander: any scheme the JVM's URL handlers understand (file, http,
+ * https, jar, ...) is fetched with no allow-list, host filter, timeout, or size cap.
  * <p>
- * <strong>This resolver is unsafe for untrusted CREPDL documents.</strong> A
- * hostile script can read local files, probe internal HTTP services, or hang
- * the parsing thread on a slow URL. Use only when every CREPDL document fed to
- * the validator originates from a trusted source.
+ * <strong>This resolver is unsafe for untrusted CREPDL documents.</strong> A hostile script can
+ * read local files, probe internal HTTP services, or hang the parsing thread on a slow URL. Use
+ * only when every CREPDL document fed to the validator originates from a trusted source.
  * </p>
  *
  * @author Philip Helger

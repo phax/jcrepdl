@@ -68,7 +68,8 @@ final class CREPDLValidatorTest
   void testUnionOfTwoBlocks ()
   {
     // BASIC LATIN union LATIN-1 SUPPLEMENT
-    final String sXml = "<union" + NS +
+    final String sXml = "<union" +
+                        NS +
                         "><repertoire registry=\"10646\" number=\"1\"/><repertoire registry=\"10646\" number=\"2\"/></union>";
     final CREPDLValidator aValidator = CREPDLValidator.createFromString (sXml, null);
     assertEquals (ECREPDLValidationResult.TRUE, aValidator.validateCharacter ("A"));
@@ -183,9 +184,9 @@ final class CREPDLValidatorTest
   }
 
   /**
-   * U+088F (ARABIC HAFIZ HIGH RECITATION MARK) was first assigned in Unicode 17.0.
-   * It must be accepted by the UNICODE 17.0 collection (number 326) but rejected
-   * by every collection from UNICODE 11.0 through UNICODE 16.0.
+   * U+088F (ARABIC HAFIZ HIGH RECITATION MARK) was first assigned in Unicode 17.0. It must be
+   * accepted by the UNICODE 17.0 collection (number 326) but rejected by every collection from
+   * UNICODE 11.0 through UNICODE 16.0.
    */
   @Test
   void testUnicode170NewCodePoint ()

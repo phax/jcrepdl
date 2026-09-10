@@ -44,12 +44,11 @@ import com.helger.crepdl.model.ICREPDLNode;
 import com.helger.crepdl.parse.CREPDLReader;
 
 /**
- * Main entry point of this library. A {@link CREPDLValidator} caches the
- * expanded CREPDL tree plus pre-built repertoires for fast repeated checking.
- *
+ * Main entry point of this library. A {@link CREPDLValidator} caches the expanded CREPDL tree plus
+ * pre-built repertoires for fast repeated checking.
  * <p>
- * Per-string results are memoized with a simple bounded cache (3000 entries,
- * mirroring the F# reference).
+ * Per-string results are memoized with a simple bounded cache (3000 entries, mirroring the F#
+ * reference).
  * </p>
  *
  * @author Philip Helger
@@ -94,9 +93,9 @@ public final class CREPDLValidator
   // ----------------------------------------------------------------------
 
   /**
-   * Build a validator from an already-parsed CREPDL root, refusing every
-   * <code>&lt;ref&gt;</code> via {@link DenyAllRefResolver}. Use
-   * {@link #create(ICREPDLNode, ICREPDLRefResolver)} to allow refs.
+   * Build a validator from an already-parsed CREPDL root, refusing every <code>&lt;ref&gt;</code>
+   * via {@link DenyAllRefResolver}. Use {@link #create(ICREPDLNode, ICREPDLRefResolver)} to allow
+   * refs.
    *
    * @param aRoot
    *        Already-parsed CREPDL root. Never <code>null</code>.
@@ -109,8 +108,8 @@ public final class CREPDLValidator
   }
 
   /**
-   * Build a validator from an already-parsed CREPDL root, routing every
-   * <code>&lt;ref&gt;</code> URI through the given resolver.
+   * Build a validator from an already-parsed CREPDL root, routing every <code>&lt;ref&gt;</code>
+   * URI through the given resolver.
    *
    * @param aRoot
    *        Already-parsed CREPDL root. Never <code>null</code>.
@@ -119,8 +118,7 @@ public final class CREPDLValidator
    * @return A fresh validator. Never <code>null</code>.
    */
   @NonNull
-  public static CREPDLValidator create (@NonNull final ICREPDLNode aRoot,
-                                        @NonNull final ICREPDLRefResolver aResolver)
+  public static CREPDLValidator create (@NonNull final ICREPDLNode aRoot, @NonNull final ICREPDLRefResolver aResolver)
   {
     return new CREPDLValidator (RefAndRepertoireExpander.expand (aRoot, aResolver));
   }
@@ -139,8 +137,8 @@ public final class CREPDLValidator
   }
 
   /**
-   * Build a validator from a local file, routing every <code>&lt;ref&gt;</code>
-   * URI through the given resolver.
+   * Build a validator from a local file, routing every <code>&lt;ref&gt;</code> URI through the
+   * given resolver.
    *
    * @param aFile
    *        CREPDL script file. Never <code>null</code>.
@@ -168,10 +166,9 @@ public final class CREPDLValidator
   }
 
   /**
-   * Build a validator from a URI, routing every <code>&lt;ref&gt;</code> URI in
-   * the loaded script through the given resolver. The top-level URI is loaded
-   * directly (it is supplied by the caller and considered trusted); only nested
-   * <code>&lt;ref&gt;</code> URIs go through the resolver.
+   * Build a validator from a URI, routing every <code>&lt;ref&gt;</code> URI in the loaded script
+   * through the given resolver. The top-level URI is loaded directly (it is supplied by the caller
+   * and considered trusted); only nested <code>&lt;ref&gt;</code> URIs go through the resolver.
    *
    * @param aUri
    *        Absolute URI of the script. Never <code>null</code>.
@@ -186,8 +183,7 @@ public final class CREPDLValidator
   }
 
   /**
-   * Build a validator from an in-memory string, refusing every
-   * <code>&lt;ref&gt;</code>.
+   * Build a validator from an in-memory string, refusing every <code>&lt;ref&gt;</code>.
    *
    * @param sXml
    *        XML source. Never <code>null</code>.
@@ -202,8 +198,8 @@ public final class CREPDLValidator
   }
 
   /**
-   * Build a validator from an in-memory string, routing every
-   * <code>&lt;ref&gt;</code> URI through the given resolver.
+   * Build a validator from an in-memory string, routing every <code>&lt;ref&gt;</code> URI through
+   * the given resolver.
    *
    * @param sXml
    *        XML source. Never <code>null</code>.
@@ -226,8 +222,7 @@ public final class CREPDLValidator
   // ----------------------------------------------------------------------
 
   /**
-   * @return The mode declared on the root element. Defaults to
-   *         {@link EMode#CHARACTER}.
+   * @return The mode declared on the root element. Defaults to {@link EMode#CHARACTER}.
    */
   @NonNull
   public EMode getRootMode ()
@@ -270,8 +265,7 @@ public final class CREPDLValidator
   }
 
   /**
-   * Validate the text from a {@link Reader}. Iteration mode is governed by the
-   * script's root mode.
+   * Validate the text from a {@link Reader}. Iteration mode is governed by the script's root mode.
    *
    * @param aReader
    *        The source. Not closed by this method.
@@ -302,8 +296,7 @@ public final class CREPDLValidator
           break;
       }
     }
-    return new CREPDLStreamValidationResult (aUnknowns.toArray (new String [0]),
-                                             aNotIncluded.toArray (new String [0]));
+    return new CREPDLStreamValidationResult (aUnknowns.toArray (new String [0]), aNotIncluded.toArray (new String [0]));
   }
 
   /**

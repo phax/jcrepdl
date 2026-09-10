@@ -27,8 +27,8 @@ import org.jspecify.annotations.NonNull;
 
 /**
  * Splits a {@link Reader} into Unicode grapheme clusters using
- * {@link BreakIterator#getCharacterInstance(Locale)}. Mirrors
- * <code>ReadGraphemeCluster.fs</code>: read the entire stream, then iterate.
+ * {@link BreakIterator#getCharacterInstance(Locale)}. Mirrors <code>ReadGraphemeCluster.fs</code>:
+ * read the entire stream, then iterate.
  *
  * @author Philip Helger
  */

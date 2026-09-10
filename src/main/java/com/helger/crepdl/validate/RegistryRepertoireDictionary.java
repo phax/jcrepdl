@@ -44,9 +44,8 @@ import com.helger.crepdl.repertoire.ISO10646Collections;
 import com.helger.crepdl.repertoire.IVDRepertoires;
 
 /**
- * Caches one {@link IRepertoire} per {@link IRegistry} encountered in an
- * expanded CREPDL tree. Created at validator-construction time so each
- * subsequent string-check is amortized.
+ * Caches one {@link IRepertoire} per {@link IRegistry} encountered in an expanded CREPDL tree.
+ * Created at validator-construction time so each subsequent string-check is amortized.
  *
  * @author Philip Helger
  */
@@ -125,17 +124,21 @@ public final class RegistryRepertoireDictionary
     if (aNode instanceof final CREPDLUnion aU)
       for (final ICREPDLNode aC : aU.children ())
         _scan (aC);
-    else if (aNode instanceof final CREPDLIntersection aI)
-      for (final ICREPDLNode aC : aI.children ())
-        _scan (aC);
-    else if (aNode instanceof final CREPDLDifference aD)
-      for (final ICREPDLNode aC : aD.children ())
-        _scan (aC);
-    else if (aNode instanceof final CREPDLRef aR)
-      for (final ICREPDLNode aC : aR.children ())
-        _scan (aC);
-    else if (aNode instanceof final CREPDLRepertoire aRep)
-      m_aMap.computeIfAbsent (aRep.registry (), this::_build);
+    else
+      if (aNode instanceof final CREPDLIntersection aI)
+        for (final ICREPDLNode aC : aI.children ())
+          _scan (aC);
+      else
+        if (aNode instanceof final CREPDLDifference aD)
+          for (final ICREPDLNode aC : aD.children ())
+            _scan (aC);
+        else
+          if (aNode instanceof final CREPDLRef aR)
+            for (final ICREPDLNode aC : aR.children ())
+              _scan (aC);
+          else
+            if (aNode instanceof final CREPDLRepertoire aRep)
+              m_aMap.computeIfAbsent (aRep.registry (), this::_build);
     // CREPDLChar has no repertoire reference
   }
 
@@ -144,8 +147,7 @@ public final class RegistryRepertoireDictionary
   // ----------------------------------------------------------------------
 
   /**
-   * Walk the expanded tree and pre-build a repertoire for every distinct
-   * {@link IRegistry} found.
+   * Walk the expanded tree and pre-build a repertoire for every distinct {@link IRegistry} found.
    *
    * @param aRoot
    *        Expanded root, never <code>null</code>.

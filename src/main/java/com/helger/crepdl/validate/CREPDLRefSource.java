@@ -24,11 +24,10 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Result of {@link ICREPDLRefResolver#resolve(URI)}. Carries the byte stream of
- * the referenced CREPDL script and an optional base URI used for resolving any
- * nested <code>&lt;ref&gt;</code> elements inside the returned document.
- * Implements {@link AutoCloseable} so callers can use it in a
- * try-with-resources block.
+ * Result of {@link ICREPDLRefResolver#resolve(URI)}. Carries the byte stream of the referenced
+ * CREPDL script and an optional base URI used for resolving any nested <code>&lt;ref&gt;</code>
+ * elements inside the returned document. Implements {@link AutoCloseable} so callers can use it in
+ * a try-with-resources block.
  *
  * @author Philip Helger
  */

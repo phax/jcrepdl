@@ -26,8 +26,8 @@ import org.jspecify.annotations.NonNull;
 import com.helger.crepdl.EThreeValuedBoolean;
 
 /**
- * A {@link IRepertoire} backed by a sorted, disjoint array of code-point
- * ranges. Membership is decided with a binary search.
+ * A {@link IRepertoire} backed by a sorted, disjoint array of code-point ranges. Membership is
+ * decided with a binary search.
  *
  * @author Philip Helger
  */
@@ -38,8 +38,8 @@ public final class CodePointRangeRepertoire implements IRepertoire
 
   /**
    * @param aStarts
-   *        Inclusive range starts. Must be sorted and disjoint with respect to
-   *        <code>aEnds</code>. Same length as <code>aEnds</code>.
+   *        Inclusive range starts. Must be sorted and disjoint with respect to <code>aEnds</code>.
+   *        Same length as <code>aEnds</code>.
    * @param aEnds
    *        Inclusive range ends.
    */
@@ -88,10 +88,11 @@ public final class CodePointRangeRepertoire implements IRepertoire
       final int nMid = (nLo + nHi) >>> 1;
       if (nCp < m_aStarts[nMid])
         nHi = nMid - 1;
-      else if (nCp > m_aEnds[nMid])
-        nLo = nMid + 1;
       else
-        return true;
+        if (nCp > m_aEnds[nMid])
+          nLo = nMid + 1;
+        else
+          return true;
     }
     return false;
   }
@@ -101,10 +102,9 @@ public final class CodePointRangeRepertoire implements IRepertoire
   // ----------------------------------------------------------------------
 
   /**
-   * Build a repertoire by reading a text file of "start,end" or "single"
-   * codepoint entries, one per line. Each number may be decimal or in
-   * <code>0x...</code> hexadecimal form (matching the F# reference's
-   * <code>int</code> parsing). A leading UTF-8/UTF-16 BOM is stripped.
+   * Build a repertoire by reading a text file of "start,end" or "single" codepoint entries, one per
+   * line. Each number may be decimal or in <code>0x...</code> hexadecimal form (matching the F#
+   * reference's <code>int</code> parsing). A leading UTF-8/UTF-16 BOM is stripped.
    *
    * @param aReader
    *        Source to read; closed by the caller.
@@ -158,12 +158,11 @@ public final class CodePointRangeRepertoire implements IRepertoire
   }
 
   /**
-   * Build a repertoire by reading semi-colon separated ranges (the storage
-   * format of the bundled <code>iso10646-inline.txt</code> file).
+   * Build a repertoire by reading semi-colon separated ranges (the storage format of the bundled
+   * <code>iso10646-inline.txt</code> file).
    *
    * @param sSpec
-   *        Specification string, e.g. <code>"32,126;128,255"</code> or
-   *        <code>""</code>.
+   *        Specification string, e.g. <code>"32,126;128,255"</code> or <code>""</code>.
    * @return A new repertoire.
    */
   @NonNull

@@ -19,11 +19,10 @@ package com.helger.crepdl.validate;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Result of validating a text stream: two arrays. {@link #unknowns()}
- * collects characters or grapheme clusters that <em>may or may not</em> be in
- * the repertoire (kernel/hull disagreement). {@link #notIncluded()} collects
- * characters or grapheme clusters that are definitely <em>not</em> in the
- * repertoire.
+ * Result of validating a text stream: two arrays. {@link #unknowns()} collects characters or
+ * grapheme clusters that <em>may or may not</em> be in the repertoire (kernel/hull disagreement).
+ * {@link #notIncluded()} collects characters or grapheme clusters that are definitely <em>not</em>
+ * in the repertoire.
  *
  * @param unknowns
  *        Strings that produced {@code UNKNOWN}.

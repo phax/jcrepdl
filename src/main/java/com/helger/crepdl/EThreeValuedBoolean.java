@@ -22,8 +22,8 @@ import org.jspecify.annotations.NonNull;
 
 /**
  * Internal three-valued boolean used during CREPDL evaluation. Differs from
- * {@link ECREPDLValidationResult} only in that the helpers here are intended
- * to be composed during evaluation (lazy second operand).
+ * {@link ECREPDLValidationResult} only in that the helpers here are intended to be composed during
+ * evaluation (lazy second operand).
  *
  * @author Philip Helger
  */
@@ -34,8 +34,8 @@ public enum EThreeValuedBoolean
   UNKNOWN;
 
   /**
-   * Set union with lazy right-hand side, matching the F# reference
-   * implementation:
+   * Set union with lazy right-hand side, matching the F# reference implementation:
+   * 
    * <pre>
    * True             -> True
    * False            -> rhs()
@@ -58,6 +58,7 @@ public enum EThreeValuedBoolean
 
   /**
    * Set intersection with lazy right-hand side:
+   * 
    * <pre>
    * False            -> False
    * True             -> rhs()

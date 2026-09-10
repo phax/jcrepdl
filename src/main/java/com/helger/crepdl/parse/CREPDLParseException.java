@@ -17,8 +17,8 @@
 package com.helger.crepdl.parse;
 
 /**
- * Thrown when a CREPDL script cannot be parsed because it violates the syntax
- * defined in ISO/IEC 19757-7.
+ * Thrown when a CREPDL script cannot be parsed because it violates the syntax defined in ISO/IEC
+ * 19757-7.
  *
  * @author Philip Helger
  */

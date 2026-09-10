@@ -28,9 +28,9 @@ import com.helger.crepdl.EThreeValuedBoolean;
 import com.helger.crepdl.model.RegistryIANA;
 
 /**
- * Builds a {@link IRepertoire} from an IANA charset name by round-tripping
- * each candidate string through that charset. A string is "in" the repertoire
- * iff <code>decode(encode(s))</code> equals <code>s</code> exactly.
+ * Builds a {@link IRepertoire} from an IANA charset name by round-tripping each candidate string
+ * through that charset. A string is "in" the repertoire iff <code>decode(encode(s))</code> equals
+ * <code>s</code> exactly.
  *
  * @author Philip Helger
  */
@@ -72,12 +72,12 @@ public final class IANARepertoires
 
     IANARepertoire (@NonNull final Charset aCharset)
     {
-      m_aEncoder = ThreadLocal.withInitial ( () -> aCharset.newEncoder ()
-                                                           .onMalformedInput (CodingErrorAction.REPORT)
-                                                           .onUnmappableCharacter (CodingErrorAction.REPORT));
-      m_aDecoder = ThreadLocal.withInitial ( () -> aCharset.newDecoder ()
-                                                           .onMalformedInput (CodingErrorAction.REPORT)
-                                                           .onUnmappableCharacter (CodingErrorAction.REPORT));
+      m_aEncoder = ThreadLocal.withInitial (() -> aCharset.newEncoder ()
+                                                          .onMalformedInput (CodingErrorAction.REPORT)
+                                                          .onUnmappableCharacter (CodingErrorAction.REPORT));
+      m_aDecoder = ThreadLocal.withInitial (() -> aCharset.newDecoder ()
+                                                          .onMalformedInput (CodingErrorAction.REPORT)
+                                                          .onUnmappableCharacter (CodingErrorAction.REPORT));
     }
 
     @Override

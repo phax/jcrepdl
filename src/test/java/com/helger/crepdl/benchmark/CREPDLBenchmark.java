@@ -81,9 +81,8 @@ public final class CREPDLBenchmark
   }
 
   /**
-   * Format a non-negative double to a fixed number of fractional digits,
-   * locale-independently and without going through {@code String.format}.
-   * Half-up rounding.
+   * Format a non-negative double to a fixed number of fractional digits, locale-independently and
+   * without going through {@code String.format}. Half-up rounding.
    */
   @NonNull
   private static String _fixed (final double dValue, final int nDecimals)

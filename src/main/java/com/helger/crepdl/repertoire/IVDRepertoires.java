@@ -31,9 +31,9 @@ import org.jspecify.annotations.NonNull;
 import com.helger.crepdl.EThreeValuedBoolean;
 
 /**
- * Repertoires for the Ideographic Variation Database (IVD). For each
- * registered IVD collection, the bundled <code>IVD_Sequences.txt</code> is
- * scanned for base-character + selector pairs that belong to that collection.
+ * Repertoires for the Ideographic Variation Database (IVD). For each registered IVD collection, the
+ * bundled <code>IVD_Sequences.txt</code> is scanned for base-character + selector pairs that belong
+ * to that collection.
  *
  * @author Philip Helger
  */
@@ -92,9 +92,8 @@ public final class IVDRepertoires
   // ----------------------------------------------------------------------
 
   /**
-   * Build a repertoire that accepts a 2-codepoint sequence
-   * <code>base + selector</code> if and only if it is registered under the
-   * given IVD collection.
+   * Build a repertoire that accepts a 2-codepoint sequence <code>base + selector</code> if and only
+   * if it is registered under the given IVD collection.
    *
    * @param sCollectionName
    *        IVD collection name (e.g. "Adobe-Japan1"). Never <code>null</code>.

@@ -64,9 +64,8 @@ public final class CCREPDL
   {}
 
   /**
-   * Encode a dotted version string like "5.2" or "5.2.1" into a single int. The
-   * encoding mirrors the F# reference implementation: major * 10000 + minor *
-   * 100 + patch.
+   * Encode a dotted version string like "5.2" or "5.2.1" into a single int. The encoding mirrors
+   * the F# reference implementation: major * 10000 + minor * 100 + patch.
    *
    * @param sVersion
    *        Version string, never <code>null</code>.

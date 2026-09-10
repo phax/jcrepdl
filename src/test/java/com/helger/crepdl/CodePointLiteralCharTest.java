@@ -24,9 +24,8 @@ import com.helger.crepdl.validate.CREPDLStreamValidationResult;
 import com.helger.crepdl.validate.CREPDLValidator;
 
 /**
- * Tests for the ISO/IEC 19757-7:2020 code-point-literal <code>&lt;char&gt;</code>
- * content syntax (single point <code>U+XXXX</code> and range
- * <code>U+XXXX-U+YYYY</code>).
+ * Tests for the ISO/IEC 19757-7:2020 code-point-literal <code>&lt;char&gt;</code> content syntax
+ * (single point <code>U+XXXX</code> and range <code>U+XXXX-U+YYYY</code>).
  *
  * @author Philip Helger
  */
@@ -89,7 +88,9 @@ final class CodePointLiteralCharTest
   @Test
   void testKernelAndHullInCodePointSyntax ()
   {
-    final String sXml = "<char" + NS + ">" +
+    final String sXml = "<char" +
+                        NS +
+                        ">" +
                         "<kernel>U+0041-U+005A</kernel>" +
                         "<hull>U+0041-U+007A</hull>" +
                         "</char>";
@@ -110,17 +111,18 @@ final class CodePointLiteralCharTest
   }
 
   /**
-   * The full sample schema from the SignalArc CREPDL&middot;CHECK validator
-   * (<a href="https://apps.signalarc.com/crepdl-validator/">apps.signalarc.com/crepdl-validator</a>).
-   * Run their sample text through our validator and assert that it identifies
-   * exactly the same two violating characters
-   * (<code>U+65E5</code> and <code>U+672C</code>) that the SignalArc service
+   * The full sample schema from the SignalArc CREPDL&middot;CHECK validator (<a href=
+   * "https://apps.signalarc.com/crepdl-validator/">apps.signalarc.com/crepdl-validator</a>). Run
+   * their sample text through our validator and assert that it identifies exactly the same two
+   * violating characters (<code>U+65E5</code> and <code>U+672C</code>) that the SignalArc service
    * reports.
    */
   @Test
   void testSignalArcSampleSchemaOnSignalArcSampleText ()
   {
-    final String sXml = "<union" + NS + ">" +
+    final String sXml = "<union" +
+                        NS +
+                        ">" +
                         "  <char>U+0009</char>" +
                         "  <char>U+000A</char>" +
                         "  <char>U+000D</char>" +

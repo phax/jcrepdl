@@ -17,10 +17,9 @@
 package com.helger.crepdl;
 
 /**
- * Three-valued result of a CREPDL validation: a string is either definitively
- * in the repertoire ({@link #TRUE}), definitively not in the repertoire
- * ({@link #FALSE}), or it cannot be decided because the kernel and hull
- * disagree ({@link #UNKNOWN}).
+ * Three-valued result of a CREPDL validation: a string is either definitively in the repertoire
+ * ({@link #TRUE}), definitively not in the repertoire ({@link #FALSE}), or it cannot be decided
+ * because the kernel and hull disagree ({@link #UNKNOWN}).
  *
  * @author Philip Helger
  */

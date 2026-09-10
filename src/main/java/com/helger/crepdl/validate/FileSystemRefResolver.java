@@ -27,16 +27,14 @@ import org.jspecify.annotations.NonNull;
 import com.helger.crepdl.parse.CREPDLParseException;
 
 /**
- * Allows CREPDL <code>&lt;ref&gt;</code> URIs with the <code>file:</code>
- * scheme whose resolved, normalised path lies under a single caller-supplied
- * root directory. URIs with any other scheme, or with a resolved path that
- * escapes the root (via <code>..</code> segments or absolute references), are
- * refused.
- *
+ * Allows CREPDL <code>&lt;ref&gt;</code> URIs with the <code>file:</code> scheme whose resolved,
+ * normalised path lies under a single caller-supplied root directory. URIs with any other scheme,
+ * or with a resolved path that escapes the root (via <code>..</code> segments or absolute
+ * references), are refused.
  * <p>
- * Note: this resolver does not de-reference symbolic links before the
- * containment check. If the root directory contains a symlink that points
- * outside, a ref through that symlink will be accepted.
+ * Note: this resolver does not de-reference symbolic links before the containment check. If the
+ * root directory contains a symlink that points outside, a ref through that symlink will be
+ * accepted.
  * </p>
  *
  * @author Philip Helger
@@ -49,8 +47,8 @@ public final class FileSystemRefResolver implements ICREPDLRefResolver
 
   /**
    * @param aRoot
-   *        Directory under which referenced files must live. Immediately turned
-   *        absolute and normalised. Never <code>null</code>.
+   *        Directory under which referenced files must live. Immediately turned absolute and
+   *        normalised. Never <code>null</code>.
    */
   public FileSystemRefResolver (@NonNull final Path aRoot)
   {

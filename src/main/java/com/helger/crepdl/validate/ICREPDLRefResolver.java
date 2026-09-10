@@ -23,18 +23,15 @@ import org.jspecify.annotations.NonNull;
 import com.helger.crepdl.parse.CREPDLParseException;
 
 /**
- * Resolves a CREPDL <code>&lt;ref href="..."/&gt;</code> URI to an XML byte
- * stream. Implementations decide whether a given URI may be dereferenced and
- * how the bytes are obtained.
+ * Resolves a CREPDL <code>&lt;ref href="..."/&gt;</code> URI to an XML byte stream. Implementations
+ * decide whether a given URI may be dereferenced and how the bytes are obtained.
  * <p>
  * The default resolver used by {@link CREPDLValidator} and
- * {@link RefAndRepertoireExpander#expand(com.helger.crepdl.model.ICREPDLNode)}
- * is {@link DenyAllRefResolver}, which refuses every URI. Callers whose CREPDL
- * scripts contain <code>&lt;ref&gt;</code> elements must explicitly opt into a
- * resolver that allows the URIs they expect &mdash; for example
- * {@link FileSystemRefResolver} for a sandboxed directory of script files, or
- * {@link UnrestrictedRefResolver} (unsafe for untrusted input) for the pre-SPI
- * behaviour.
+ * {@link RefAndRepertoireExpander#expand(com.helger.crepdl.model.ICREPDLNode)} is
+ * {@link DenyAllRefResolver}, which refuses every URI. Callers whose CREPDL scripts contain
+ * <code>&lt;ref&gt;</code> elements must explicitly opt into a resolver that allows the URIs they
+ * expect &mdash; for example {@link FileSystemRefResolver} for a sandboxed directory of script
+ * files, or {@link UnrestrictedRefResolver} (unsafe for untrusted input) for the pre-SPI behaviour.
  * </p>
  *
  * @author Philip Helger
@@ -47,11 +44,10 @@ public interface ICREPDLRefResolver
    *
    * @param aHref
    *        Absolute URI to resolve. Never <code>null</code>.
-   * @return Open byte source. The caller owns the returned stream and must
-   *         close it. Never <code>null</code>.
+   * @return Open byte source. The caller owns the returned stream and must close it. Never
+   *         <code>null</code>.
    * @throws CREPDLParseException
-   *         if the URI is rejected by the resolver's policy or cannot be
-   *         fetched.
+   *         if the URI is rejected by the resolver's policy or cannot be fetched.
    */
   @NonNull
   CREPDLRefSource resolve (@NonNull URI aHref);

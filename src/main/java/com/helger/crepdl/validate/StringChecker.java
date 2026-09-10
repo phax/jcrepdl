@@ -31,8 +31,8 @@ import com.helger.crepdl.model.CREPDLUnion;
 import com.helger.crepdl.model.ICREPDLNode;
 
 /**
- * Three-valued evaluator for the expanded CREPDL tree. Mirrors
- * <code>StringValidation.fs</code> from the reference implementation.
+ * Three-valued evaluator for the expanded CREPDL tree. Mirrors <code>StringValidation.fs</code>
+ * from the reference implementation.
  *
  * @author Philip Helger
  */
@@ -42,8 +42,7 @@ public final class StringChecker
 
   /**
    * @param aRrd
-   *        Pre-built registry &rarr; repertoire dictionary. Never
-   *        <code>null</code>.
+   *        Pre-built registry &rarr; repertoire dictionary. Never <code>null</code>.
    */
   public StringChecker (@NonNull final RegistryRepertoireDictionary aRrd)
   {
@@ -159,8 +158,8 @@ public final class StringChecker
   // ----------------------------------------------------------------------
 
   /**
-   * Evaluate the candidate string against the full tree, propagating the
-   * effective UCS version window.
+   * Evaluate the candidate string against the full tree, propagating the effective UCS version
+   * window.
    *
    * @param aRoot
    *        The expanded root node.
